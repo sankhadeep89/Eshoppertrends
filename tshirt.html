@@ -1,0 +1,278 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E_Shopperstrends - Your One-Stop Shop</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        /* Custom styles for enhanced design */
+        .hero-bg {
+            background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1920&h=1080');
+            background-size: cover;
+            background-position: center;
+        }
+        .category-section, .contact-section {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); /* Beautiful gradient background */
+        }
+        .category-card {
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .category-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+        .category-card.active {
+            background-color: #4a90e2;
+            color: white;
+        }
+        .product-card {
+            transition: transform 0.3s, box-shadow 0.3s;
+            display: none;
+        }
+        .product-card.active {
+            display: block;
+        }
+        .product-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+        }
+        .product-image {
+            width: 100%;
+            height: 300px; /* Adjusted to match 300x300 image size */
+            object-fit: cover;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans">
+    <!-- Navigation Bar -->
+    <nav class="bg-white shadow-md sticky top-0 z-50">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="logo text-2xl md:text-3xl">E_Shopperstrends</div>
+            <div class="space-x-4">
+                <a href="#home" class="text-gray-700 hover:text-blue-600">Home</a>
+                <a href="#categories" class="text-gray-700 hover:text-blue-600">Categories</a>
+                <a href="#contact" class="text-gray-700 hover:text-blue-600">Contact</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Categories Section -->
+    <section id="categories" class="py-12 category-section">
+        <div class="container mx-auto px-4">
+            <h2 class="text-3xl font-bold text-center mb-8">Our Categories</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                <div class="category-card bg-white p-6 rounded-lg text-center transition-transform duration-300" onclick="toggleCategory('t-shirts', this)">
+                    <h3 class="text-xl font-semibold mb-2">T-Shirts</h3>
+                    <p class="text-gray-600">Explore our trendy and comfortable t-shirts for all occasions.</p>
+                </div>
+                <div class="category-card bg-white p-6 rounded-lg text-center transition-transform duration-300" onclick="toggleCategory('electronics', this)">
+                    <h3 class="text-xl font-semibold mb-2">Electronics</h3>
+                    <p class="text-gray-600">Discover cutting-edge gadgets and electronics.</p>
+                </div>
+                <div class="category-card bg-white p-6 rounded-lg text-center transition-transform duration-300" onclick="toggleCategory('jewelleries', this)">
+                    <h3 class="text-xl font-semibold mb-2">Jewelleries</h3>
+                    <p class="text-gray-600">Adorn yourself with our exquisite jewelry collection.</p>
+                </div>
+            </div>
+            <div id="category-products" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mt-8">
+                <div class="product-card bg-white p-4 rounded-lg shadow-md text-center" data-category="t-shirts">
+                    <img src="https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&w=300&h=300" alt="Precious Mode T-Shirt" class="product-image">
+                    <h3 class="text-lg font-semibold">Precious Mode T-Shirt</h3>
+                    <p class="text-gray-600">Stylish anime-themed t-shirt with a heart design. ₹279</p>
+                </div>
+                <div class="product-card bg-white p-4 rounded-lg shadow-md text-center" data-category="t-shirts">
+                    <img src="https://images.unsplash.com/photo-1543163521-1bf539c55dd2?auto=format&fit=crop&w=300&h=300" alt="Gojo Limited T-Shirt" class="product-image">
+                    <h3 class="text-lg font-semibold">Gojo Limited T-Shirt</h3>
+                    <p class="text-gray-600">Exclusive anime t-shirt with vibrant design. ₹349</p>
+                </div>
+                <div class="product-card bg-white p-4 rounded-lg shadow-md text-center" data-category="t-shirts">
+                    <img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=300&h=300" alt="Sukuna T-Shirt" class="product-image">
+                    <h3 class="text-lg font-semibold">Sukuna T-Shirt</h3>
+                    <p class="text-gray-600">Trendy anime-inspired t-shirt. ₹249</p>
+                </div>
+                <div class="product-card bg-white p-4 rounded-lg shadow-md text-center" data-category="electronics">
+                    <img src="https://images.unsplash.com/photo-1600585154216-60b704c26835?auto=format&fit=crop&w=300&h=300" alt="Airpod Pro with Case" class="product-image">
+                    <h3 class="text-lg font-semibold">Airpod Pro + Case Cover</h3>
+                    <p class="text-gray-600">High-quality earbuds with a free case cover. ₹349</p>
+                </div>
+                <div class="product-card bg-white p-4 rounded-lg shadow-md text-center" data-category="electronics">
+                    <img src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=300&h=300" alt="Small Size Speaker" class="product-image">
+                    <h3 class="text-lg font-semibold">Small Size Speaker</h3>
+                    <p class="text-gray-600">Compact and powerful speaker in vibrant colors. ₹299</p>
+                </div>
+                <div class="product-card bg-white p-4 rounded-lg shadow-md text-center" data-category="jewelleries">
+                    <img src="https://images.unsplash.com/photo-1522308601830-6e6ce7e9bd6b?auto=format&fit=crop&w=300&h=300" alt="Precious Jewelry Set" class="product-image">
+                    <h3 class="text-lg font-semibold">Precious Jewelry Set</h3>
+                    <p class="text-gray-600">Elegant watch and bracelet set. ₹259</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Hero Section with All Products -->
+    <section id="home" class="py-12 bg-gray-50">
+        <div class="container mx-auto px-4 text-center">
+            <h1 class="text-4xl md:text-5xl font-bold mb-6">Welcome to E_Shopperstrends</h1>
+            <p class="text-lg md:text-xl mb-6">Discover the latest trends in fashion, electronics, and jewelry!</p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+                <div class="product-card bg-white p-4 rounded-lg shadow-md text-center active">
+                    <a href="precious-mode-tshirt.html">
+                        <img src="https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&w=300&h=300" alt="Precious Mode T-Shirt" class="product-image">
+                        <h3 class="text-lg font-semibold">Precious Mode T-Shirt</h3>
+                        <p class="text-gray-600">Stylish anime-themed t-shirt with a heart design. ₹279</p>
+                    </a>
+                </div>
+                <div class="product-card bg-white p-4 rounded-lg shadow-md text-center active">
+                    <img src="https://images.unsplash.com/photo-1543163521-1bf539c55dd2?auto=format&fit=crop&w=300&h=300" alt="Gojo Limited T-Shirt" class="product-image">
+                    <h3 class="text-lg font-semibold">Gojo Limited T-Shirt</h3>
+                    <p class="text-gray-600">Exclusive anime t-shirt with vibrant design. ₹349</p>
+                </div>
+                <div class="product-card bg-white p-4 rounded-lg shadow-md text-center active">
+                    <img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=300&h=300" alt="Sukuna T-Shirt" class="product-image">
+                    <h3 class="text-lg font-semibold">Sukuna T-Shirt</h3>
+                    <p class="text-gray-600">Trendy anime-inspired t-shirt. ₹249</p>
+                </div>
+                <div class="product-card bg-white p-4 rounded-lg shadow-md text-center active">
+                    <img src="https://images.unsplash.com/photo-1600585154216-60b704c26835?auto=format&fit=crop&w=300&h=300" alt="Airpod Pro with Case" class="product-image">
+                    <h3 class="text-lg font-semibold">Airpod Pro + Case Cover</h3>
+                    <p class="text-gray-600">High-quality earbuds with a free case cover. ₹349</p>
+                </div>
+                <div class="product-card bg-white p-4 rounded-lg shadow-md text-center active">
+                    <img src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=300&h=300" alt="Small Size Speaker" class="product-image">
+                    <h3 class="text-lg font-semibold">Small Size Speaker</h3>
+                    <p class="text-gray-600">Compact and powerful speaker in vibrant colors. ₹299</p>
+                </div>
+                <div class="product-card bg-white p-4 rounded-lg shadow-md text-center active">
+                    <img src="https://images.unsplash.com/photo-1522308601830-6e6ce7e9bd6b?auto=format&fit=crop&w=300&h=300" alt="Precious Jewelry Set" class="product-image">
+                    <h3 class="text-lg font-semibold">Precious Jewelry Set</h3>
+                    <p class="text-gray-600">Elegant watch and bracelet set. ₹259</p>
+                </div>
+            </div>
+            <a href="#categories" class="mt-6 inline-block bg-blue-600 text-white px-6 py-3 rounded-full hover:bg-blue-700">Explore More</a>
+        </div>
+    </section>
+
+    <!-- Contact Us Section -->
+    <section id="contact" class="py-12 contact-section">
+        <div class="container mx-auto px-4">
+            <h2 class="text-3xl font-bold text-center mb-8">Contact Us</h2>
+            <div class="max-w-lg mx-auto">
+                <div action="#" class="space-y-4">
+                    <div>
+                        <label for="name" class="block text-gray-700">Name</label>
+                        <input type="text" id="name" class="w-full p-2 border rounded-md" placeholder="Your Name">
+                    </div>
+                    <div>
+                        <label for="email" class="block text-gray-700">Email</label>
+                        <input type="email" id="email" class="w-full p-2 border rounded-md" placeholder="Your Email">
+                    </div>
+                    <div>
+                        <label for="message" class="block text-gray-700">Message</label>
+                        <textarea id="message" class="w-full p-2 border rounded-md" rows="5" placeholder="Your Message"></textarea>
+                    </div>
+                    <button onclick="submitContactForm()" class="bg-blue-600 text-white px-6 py-3 rounded-full hover:bg-blue-700 w-full">Send Message</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-6">
+        <div class="container mx-auto px-4 text-center">
+            <p>© 2025 E_Shopperstrends. All rights reserved.</p>
+            <div class="mt-4 space-x-4">
+                <a href="#" class="hover:text-blue-400">Privacy Policy</a>
+                <a href="#" class="hover:text-blue-400">Terms of Service</a>
+                <a href="#contact" class="hover:text-blue-400">Contact Us</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // JavaScript for handling category toggling
+        function toggleCategory(category, element) {
+            const categories = document.querySelectorAll('.category-card');
+            const products = document.querySelectorAll('#category-products .product-card');
+            const isActive = element.classList.contains('active');
+
+            categories.forEach(cat => cat.classList.remove('active'));
+            if (!isActive) {
+                element.classList.add('active');
+                products.forEach(product => {
+                    product.classList.remove('active');
+                    if (category === 'all' || product.getAttribute('data-category') === category) {
+                        product.classList.add('active');
+                    }
+                });
+            } else {
+                products.forEach(product => product.classList.remove('active'));
+                element.classList.remove('active');
+            }
+        }
+
+        // JavaScript for handling contact form submission
+        function submitContactForm() {
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            const message = document.getElementById('message').value;
+
+            if (name && email && message) {
+                alert('Thank you for your message! We will get back to you soon.');
+                document.getElementById('name').value = '';
+                document.getElementById('email').value = '';
+                document.getElementById('message').value = '';
+            } else {
+                alert('Please fill in all fields.');
+            }
+        }
+
+        // Initialize with no products visible in category section
+        window.onload = function() {
+            const products = document.querySelectorAll('#category-products .product-card');
+            products.forEach(product => product.classList.remove('active'));
+        };
+    </script>
+</body>
+</html>

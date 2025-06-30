@@ -1,0 +1,234 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout - E_Shopperstrends</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #3b82f6, #e5e7eb);
+            position: relative;
+            min-height: 100vh;
+        }
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('https://www.transparenttextures.com/patterns/subtle-grunge.png');
+            opacity: 0.1;
+            z-index: -1;
+        }
+        .form-container {
+            max-width: 900px;
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+        }
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+        @media (min-width: 768px) {
+            .form-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+        .form-field {
+            display: flex;
+            flex-direction: column;
+        }
+        .form-field label {
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+        .form-field input, .form-field textarea {
+            padding: 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        .form-field input:focus, .form-field textarea:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+            outline: none;
+        }
+        .form-field textarea {
+            resize: vertical;
+        }
+        .button {
+            transition: transform 0.2s, background 0.3s;
+        }
+        .button:hover {
+            transform: scale(1.05);
+        }
+        .checkout-button {
+            background: linear-gradient(to right, #3b82f6, #1e40af);
+        }
+        .checkout-button:hover {
+            background: linear-gradient(to right, #2563eb, #1e3a8a);
+        }
+        .back-button {
+            background: linear-gradient(to right, #6b7280, #4b5563);
+        }
+        .back-button:hover {
+            background: linear-gradient(to right, #4b5563, #374151);
+        }
+    </style>
+</head>
+<body class="font-sans">
+    <!-- Navigation Bar -->
+    <nav class="bg-white shadow-md sticky top-0 z-50">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="logo text-2xl md:text-3xl font-bold text-gray-800">E_Shopperstrends</div>
+            <div class="space-x-4">
+                <a href="index.html#home" class="text-gray-700 hover:text-blue-600">Home</a>
+                <a href="index.html#categories" class="text-gray-700 hover:text-blue-600">Categories</a>
+                <a href="index.html#contact" class="text-gray-700 hover:text-blue-600">Contact</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Checkout Form Section -->
+    <section class="py-12">
+        <div class="form-container mx-auto px-4">
+            <h1 class="text-3xl font-bold mb-6 text-center text-gray-800">Complete Your Order</h1>
+            <div class="form-grid">
+                <div class="form-field">
+                    <label for="first-name">First Name</label>
+                    <input type="text" id="first-name" required placeholder="Enter your first name">
+                </div>
+                <div class="form-field">
+                    <label for="last-name">Last Name</label>
+                    <input type="text" id="last-name" required placeholder="Enter your last name">
+                </div>
+                <div class="form-field">
+                    <label for="phone-number">Phone Number</label>
+                    <input type="tel" id="phone-number" required placeholder="Enter your phone number">
+                </div>
+                <div class="form-field">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" required placeholder="Enter your email">
+                </div>
+                <div class="form-field">
+                    <label for="house-no">House No.</label>
+                    <input type="text" id="house-no" required placeholder="Enter house number">
+                </div>
+                <div class="form-field">
+                    <label for="state">State</label>
+                    <input type="text" id="state" required placeholder="Enter your state">
+                </div>
+                <div class="form-field">
+                    <label for="pincode">Pincode</label>
+                    <input type="text" id="pincode" required placeholder="Enter your pincode">
+                </div>
+                <div class="form-field col-span-1 md:col-span-2">
+                    <label for="full-address">Full Address</label>
+                    <textarea id="full-address" rows="4" required placeholder="Enter your full address"></textarea>
+                </div>
+                <div class="form-field col-span-1 md:col-span-2">
+                    <label for="additional-notes">Additional Notes (Optional)</label>
+                    <textarea id="additional-notes" rows="3" placeholder="Any special instructions?"></textarea>
+                </div>
+            </div>
+            <div class="flex flex-col md:flex-row gap-4 mt-8 justify-center">
+              <a href="payment.html">  <button onclick="proceedToCheckout()" class="checkout-button bg-blue-600 text-white px-6 py-3 rounded-full w-full md:w-1/2 button font-semibold">Proceed to Checkout</button></a>
+                <a href="index.html#home" onclick="goBackToHome(event)" class="back-button bg-gray-700 text-white px-6 py-3 rounded-full w-full md:w-1/2 button text-center font-semibold">Back to Main Page</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-6 mt-12">
+        <div class="container mx-auto px-4 text-center">
+            <p>© 2025 E_Shopperstrends. All rights reserved.</p>
+            <div class="mt-4 space-x-4">
+                <a href="#" class="hover:text-blue-400">Privacy Policy</a>
+                <a href="#" class="hover:text-blue-400">Terms of Service</a>
+                <a href="index.html#contact" class="hover:text-blue-400">Contact Us</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Get size and price from URL query parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const size = urlParams.get('size') || 'Unknown';
+        const price = urlParams.get('price') || '₹0';
+
+        function proceedToCheckout() {
+            const firstName = document.getElementById('first-name').value;
+            const lastName = document.getElementById('last-name').value;
+            const phoneNumber = document.getElementById('phone-number').value;
+            const email = document.getElementById('email').value;
+            const houseNo = document.getElementById('house-no').value;
+            const state = document.getElementById('state').value;
+            const pincode = document.getElementById('pincode').value;
+            const fullAddress = document.getElementById('full-address').value;
+            const additionalNotes = document.getElementById('additional-notes').value;
+
+            if (firstName && lastName && phoneNumber && email && houseNo && state && pincode && fullAddress) {
+                alert(`Order placed for Precious Mode T-Shirt, Size: ${size}, Price: ${price}\nCustomer: ${firstName} ${lastName}\nPhone: ${phoneNumber}\nEmail: ${email}\nAddress: ${houseNo}, ${fullAddress}, ${state}, ${pincode}\nNotes: ${additionalNotes || 'None'}`);
+            } else {
+                alert('Please fill in all required fields.');
+            }
+        }
+
+        function goBackToHome(event) {
+            event.preventDefault();
+            console.log('Attempting to navigate to index.html#home');
+            try {
+                window.location.href = 'index.html#home';
+            } catch (error) {
+                console.error('Navigation error:', error);
+                alert('Unable to navigate to Home page. Please check if index.html exists in the same directory.');
+            }
+        }
+    </script>
+</body>
+</html>
